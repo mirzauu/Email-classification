@@ -4,10 +4,12 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from core.config import settings
 
-# Create database engine
+# Create database engine (Supabase PostgreSQL)
 engine = create_engine(
-    settings.DATABASE_URL or "sqlite:///./email_classification.db",
-    connect_args={"check_same_thread": False} if "sqlite" in (settings.DATABASE_URL or "") else {}
+    settings.DATABASE_URL,
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True,
 )
 
 # Create session factory

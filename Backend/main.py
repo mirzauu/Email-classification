@@ -9,7 +9,7 @@ from modules.parsing.models import Email  # noqa: F401
 from modules.auth.router import router as auth_router
 from modules.users.router import router as users_router
 from modules.parsing.router import router as parsing_router
-
+from modules.emails.router import router as emails_router
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
@@ -33,7 +33,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(users_router, prefix=settings.API_V1_PREFIX)
 app.include_router(parsing_router, prefix=settings.API_V1_PREFIX)
-
+app.include_router(emails_router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/")
 async def root():

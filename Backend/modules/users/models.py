@@ -1,5 +1,4 @@
 """User models."""
-# User models can be imported from auth module or extended here
-from modules.auth.models import User
+from modules.auth.models import User, FastAPIUser
 
-__all__ = ["User"]
+__all__ = ["User", "FastAPIUser"]

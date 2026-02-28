@@ -2,20 +2,24 @@
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from core.config import settings
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"), 
+        hashed_password.encode("utf-8")
+    )
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password."""
-    return pwd_context.hash(password)
+    # Bcrypt supports max 72 bytes. We truncate to ensure stability.
+    pwd_bytes = password.encode("utf-8")[:72]
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pwd_bytes, salt).decode("utf-8")
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -38,3 +42,20 @@ def decode_access_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
+def create_state_token(user_id: str) -> str:
+    """Create a signed state token containing user ID for OAuth linking."""
+    expire = datetime.utcnow() + timedelta(minutes=15)
+    to_encode = {"sub": user_id, "exp": expire, "type": "oauth_state"}
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+
+def verify_state_token(token: str) -> Optional[str]:
+    """Verify state token and return user_id."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        if payload.get("type") != "oauth_state":
+            return None
+        return payload.get("sub")
+    except JWTError:
+        return None
+

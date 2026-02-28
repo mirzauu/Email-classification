@@ -6,4 +6,4 @@ from core.database import get_db
 
 def get_database_session() -> Generator[Session, None, None]:
     """Get database session dependency."""
-    return get_db()
+    yield from get_db()

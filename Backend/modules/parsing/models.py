@@ -8,6 +8,7 @@ from core.database import Base
 class Email(Base):
     """Email model for parsing."""
     __tablename__ = "emails"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     subject = Column(String, nullable=False)
