@@ -3,13 +3,19 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
 from core.dependencies import get_database_session
-from modules.parsing.schemas import EmailCreate, EmailResponse, EmailUpdate
+from modules.parsing.schemas import (
+    EmailCreate,
+    EmailResponse,
+    EmailUpdate,
+    ClassificationBatchRequest,
+    ClassificationBatchResponse,
+)
 from modules.parsing.service import (
     create_email,
     get_all_emails,
     get_email_by_id,
     update_email_classification,
-    classify_email
+    classify_email_batch,
 )
 
 router = APIRouter(prefix="/parsing", tags=["parsing"])
@@ -49,13 +55,13 @@ async def get_email(
     return email
 
 
-@router.put("/{email_id}/classify", response_model=EmailResponse)
-async def classify_email_endpoint(
-    email_id: int,
+@router.post("/batch-classify", response_model=ClassificationBatchResponse)
+async def classify_emails_batch_endpoint(
+    request: ClassificationBatchRequest,
     db: Session = Depends(get_database_session)
 ):
-    """Classify an email."""
-    return classify_email(db, email_id)
+    """Classify a batch of emails asynchronously using the LLM provider."""
+    return await classify_email_batch(db, request.email_ids)
 
 
 @router.patch("/{email_id}", response_model=EmailResponse)
@@ -64,6 +70,6 @@ async def update_email(
     email_update: EmailUpdate,
     db: Session = Depends(get_database_session)
 ):
-    """Update email classification."""
+    """Update email classification, summary, or labels."""
     return update_email_classification(db, email_id, email_update)
 

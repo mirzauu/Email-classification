@@ -21,8 +21,26 @@ async def link_google_account(user: User = Depends(get_current_user)):
     url = get_google_auth_url(settings.GOOGLE_LINK_REDIRECT_URI, state=state_token)
     return RedirectResponse(url)
 
+from fastapi import BackgroundTasks
+
+async def sync_gmail_background(user_id: str, access_token: str):
+    from core.database import SessionLocal
+    from modules.emails.gmail_service import GmailSyncService
+    
+    db = SessionLocal()
+    try:
+        service = GmailSyncService(db, user_id)
+        await service.initial_sync(access_token, limit=50)
+    finally:
+        db.close()
+
 @router.get("/google/link-callback")
-async def link_google_callback(code: str, state: str, db: Session = Depends(get_database_session)):
+async def link_google_callback(
+    code: str, 
+    state: str, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_database_session)
+):
     """Handle callback for linking a Gmail account."""
     user_id = verify_state_token(state)
     if not user_id:
@@ -71,5 +89,9 @@ async def link_google_callback(code: str, state: str, db: Session = Depends(get_
             email_account.token_expires_at = datetime.utcnow() + timedelta(seconds=tokens["expires_in"])
             
     db.commit()
+    
+    # 4. Trigger Background Sync task
+    background_tasks.add_task(sync_gmail_background, user_id, access_token)
+    
     # Redirect to a frontend success page
     return RedirectResponse(url=f"{settings.FRONTEND_URL}/settings?account_linked=true&email={email_address}")

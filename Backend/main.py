@@ -1,11 +1,25 @@
 """Main FastAPI application."""
+# Load .env into os.environ FIRST — this is critical because
+# ProviderService and LLMConfigManager read keys via os.getenv()
+from dotenv import load_dotenv
+load_dotenv()
+
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
+logger = logging.getLogger("main")
+
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from core.database import engine, Base
 # Import all models to register them with SQLAlchemy
 from modules.auth.models import User  # noqa: F401
-from modules.parsing.models import Email  # noqa: F401
+from modules.emails.models import Email  # noqa: F401
 from modules.auth.router import router as auth_router
 from modules.users.router import router as users_router
 from modules.parsing.router import router as parsing_router

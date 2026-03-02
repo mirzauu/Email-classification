@@ -22,6 +22,8 @@ class EmailAccount(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # Optional: user = relationship("User", backref="email_accounts")
+
 class Email(Base):
     __tablename__ = "emails"
     __table_args__ = {'extend_existing': True}
@@ -32,6 +34,8 @@ class Email(Base):
     recipient = Column(String, nullable=False)
     body = Column(Text)
     classification = Column(String)
+    summary = Column(Text)
+    labels = Column(Text) # JSON string
     user_id = Column(String, ForeignKey("user.id"))
     gmail_id = Column(String)
     thread_id = Column(String)
@@ -41,7 +45,9 @@ class Email(Base):
     classification_confidence = Column(Double)
     classification_reason = Column(Text)
 
-    events = relationship("EmailEvent", back_populates="email")
+    # Relationships
+    user = relationship("User", backref="emails")
+    events = relationship("EmailEvent", back_populates="email", cascade="all, delete-orphan")
 
 class EmailEvent(Base):
     __tablename__ = "email_events"
@@ -55,4 +61,5 @@ class EmailEvent(Base):
     extracted_data = Column(JSONB)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
-    email = relationship(Email, back_populates="events")
+    # Relationship to Email - Use string to avoid mapper conflicts
+    email = relationship("Email", back_populates="events")

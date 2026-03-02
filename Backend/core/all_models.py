@@ -6,6 +6,7 @@ from core.database import Base
 
 # Import all models to register them with Base.metadata
 from modules.auth.models import FastAPIUser, User, Account, Connection
+from modules.users.models import UserPreferences
 from modules.emails.models import EmailAccount, Email, EmailEvent
 from modules.financials.models import Platform, PaymentChannel, Client, ExternalAccount, Invoice, Transaction, PaymentChain, PaymentChainItem
 from modules.ai.models import BackgroundTask, EmbeddingRecord
